@@ -47,9 +47,10 @@ int ledFrontLightState{0};
 
 int Helper_ConvertArrToInt(int *array, int length) {
   int sum{};
+
   for (int i = 0; i < length; i++) {
     int pow{1};
-    for (int j = 0; j < length - i - i; j++) {
+    for (int j = 0; j < length - i - 1; j++) {
       pow *= 10;
     }
     int res = array[i] * pow;
@@ -107,12 +108,15 @@ void SpinMotor(int x_value) {
 /*Data processing*/
 
 ReceivedData receiveAndAnalyzeData() {
-  int *converted_buff = ConvertBuff(
-      buf, buflen); // [0][2][3][4][5][7][8][9][1] - integer array
-                    // in example [0] - byte means message from the
-                    // JoystickXY, rest of the array is a payload
-                    // [2][3][4][5] for the X value (first 4 bytes after header
-                    // byte) [7][8][9][1] for the Y value (last 4 bytes)
+  int test_arr[13] = {0, 1, 2, 3, 5, 6, 7, 4, 1, 5, 2, 9};
+  int *converted_buff = test_arr;
+  // int *converted_buff = ConvertBuff(
+  //     buf, buflen); // [0][2][3][4][5][7][8][9][1] - integer array
+  //                   // in example [0] - byte means message from the
+  //                   // JoystickXY, rest of the array is a payload
+  //                   // [2][3][4][5] for the X value (first 4 bytes after
+  //                   header
+  //                   // byte) [7][8][9][1] for the Y value (last 4 bytes)
   int jxy_msg_buff[JOYSTICK_XY_MSG_LENGTH];
   int jbutt_msg_buff[JOYSTICK_BUTON_MSG_LENGTH];
   int butt_msg_buff[BUTTON_MSG_LENGTH];
@@ -125,7 +129,7 @@ ReceivedData receiveAndAnalyzeData() {
     jbutt_msg_buff[j] = converted_buff[i];
   }
   for (int i = JOYSTICK_XY_MSG_LENGTH + JOYSTICK_BUTON_MSG_LENGTH + 1, j = 0;
-       j < BUTON_MSG_LENGTH; i++, j++) {
+       j < BUTTON_MSG_LENGTH; i++, j++) {
     butt_msg_buff[j] = converted_buff[i];
   }
 
@@ -133,18 +137,31 @@ ReceivedData receiveAndAnalyzeData() {
   int jy_array[ANALOG_SIZE];
 
   for (int i = 0; i < ANALOG_SIZE; i++) {
-    jx_array = jxy_msg_buff[i];
+    jx_array[i] = jxy_msg_buff[i];
   }
-  for (int i = ANALOG_SIZE; i < ANALOG_SIZE * 2; i++) {
-    jy_array = jxy_msg_buff[i];
+  for (int i = ANALOG_SIZE, j = 0; i < ANALOG_SIZE * 2; i++, j++) {
+    jy_array[j] = jxy_msg_buff[i];
   }
 
   ReceivedData rd{};
 
-  rd.joystick_x = Helper_ConvertArrToInt(jxy_msg_buff); // FIX THIS!!!!!
-  rd.joystick_y = Helper_ConvertArrToInt(jxy_msg_buff); // FIX THIS!!!!!
-  rd.joystick_button_state = Helper_ConvertArrToInt(jbutt_msg_buff);
-  rd.button_state = Helper_ConvertArrToInt(butt_msg_buff);
+  int test_pass_arr[4] = {1, 1, 1, 4};
+  rd.joystick_x = Helper_ConvertArrToInt(jx_array, 4);
+  rd.joystick_y = Helper_ConvertArrToInt(jy_array, 4);
+  rd.joystick_button_state =
+      Helper_ConvertArrToInt(jbutt_msg_buff, JOYSTICK_BUTON_MSG_LENGTH);
+  rd.button_state = Helper_ConvertArrToInt(butt_msg_buff, BUTTON_MSG_LENGTH);
+
+#ifdef DEBUG_ENABLED
+  Serial.println("rd.joystick_x");
+  Serial.println(rd.joystick_x);
+  Serial.println("rd.joystick_y");
+  Serial.println(rd.joystick_y);
+  Serial.println("rd.joystick_button_state");
+  Serial.println(rd.joystick_button_state);
+  Serial.println("rd.button_state");
+  Serial.println(rd.button_state);
+#endif
 };
 
 void setup() {
@@ -157,4 +174,4 @@ void setup() {
   }
 }
 
-void loop() { SpinMotor(10); }
+void loop() { receiveAndAnalyzeData(); }
