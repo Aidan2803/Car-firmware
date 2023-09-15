@@ -108,7 +108,7 @@ void SpinMotor(int x_value) {
 /*Data processing*/
 
 ReceivedData receiveAndAnalyzeData() {
-  int test_arr[13] = {0, 1, 2, 3, 5, 6, 7, 4, 1, 5, 2, 9};
+  int test_arr[13] = {0, 1, 2, 3, 5, 6, 7, 4, 1, 1, 0, 2, 1};
   int *converted_buff = test_arr;
   // int *converted_buff = ConvertBuff(
   //     buf, buflen); // [0][2][3][4][5][7][8][9][1] - integer array
@@ -121,16 +121,13 @@ ReceivedData receiveAndAnalyzeData() {
   int jbutt_msg_buff[JOYSTICK_BUTON_MSG_LENGTH];
   int butt_msg_buff[BUTTON_MSG_LENGTH];
 
-  for (int i = 1; i < JOYSTICK_XY_MSG_LENGTH; i++) {
-    jxy_msg_buff[i] = converted_buff[i];
-  }
-  for (int i = JOYSTICK_XY_MSG_LENGTH + 1, j = 0; j < JOYSTICK_BUTON_MSG_LENGTH;
-       i++, j++) {
-    jbutt_msg_buff[j] = converted_buff[i];
-  }
-  for (int i = JOYSTICK_XY_MSG_LENGTH + JOYSTICK_BUTON_MSG_LENGTH + 1, j = 0;
-       j < BUTTON_MSG_LENGTH; i++, j++) {
-    butt_msg_buff[j] = converted_buff[i];
+  Serial.println("=============================");
+  Serial.println(converted_buff[JOYSTICK_XY_MSG_LENGTH + 1]);
+  Serial.println(converted_buff[JOYSTICK_XY_MSG_LENGTH + 1 + 2]);
+  Serial.println("=============================");
+
+  for (int i = 1, j = 0; i < JOYSTICK_XY_MSG_LENGTH; i++, j++) {
+    jxy_msg_buff[j] = converted_buff[i];
   }
 
   int jx_array[ANALOG_SIZE];
@@ -145,12 +142,10 @@ ReceivedData receiveAndAnalyzeData() {
 
   ReceivedData rd{};
 
-  int test_pass_arr[4] = {1, 1, 1, 4};
-  rd.joystick_x = Helper_ConvertArrToInt(jx_array, 4);
-  rd.joystick_y = Helper_ConvertArrToInt(jy_array, 4);
-  rd.joystick_button_state =
-      Helper_ConvertArrToInt(jbutt_msg_buff, JOYSTICK_BUTON_MSG_LENGTH);
-  rd.button_state = Helper_ConvertArrToInt(butt_msg_buff, BUTTON_MSG_LENGTH);
+  rd.joystick_x = Helper_ConvertArrToInt(jx_array, ANALOG_SIZE);
+  rd.joystick_y = Helper_ConvertArrToInt(jy_array, ANALOG_SIZE);
+  rd.joystick_button_state = converted_buff[JOYSTICK_XY_MSG_LENGTH + 1];
+  rd.button_state = converted_buff[JOYSTICK_XY_MSG_LENGTH + 1 + 2];
 
 #ifdef DEBUG_ENABLED
   Serial.println("rd.joystick_x");
